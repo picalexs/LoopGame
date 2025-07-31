@@ -60,7 +60,7 @@ public class ProceduralGear : MonoBehaviour
                 //GameObject.CreatePrimitive(PrimitiveType.Sphere).transform.position = q1;
                 //GameObject.CreatePrimitive(PrimitiveType.Sphere).transform.position = q2;
 
-                vertices[vertIndex] = p1;
+                vertices[vertIndex] = p1; // miau
                 vertices[vertIndex + 1] =p2;
                 vertices[vertIndex + 2] = q2;
                 vertices[vertIndex + 3] = q1;
