@@ -4,15 +4,15 @@ using System.Linq;
 using UnityEngine;
 
 
-public class PlayerScript : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     private InputSystem_Actions _inputSystemActions;
     private Rigidbody2D _rigidBody;
     private Renderer _playerRenderer;
     [SerializeField] private LayerMask _groundLayer;
     //private Animator _anim;
-    //[SerializeField] private GameObject _transitionManager;
-    //private Animator _transition;
+    [SerializeField] private GameObject _transitionManager;
+    private Animator _transition;
 
     [Space(10), Header("Sound")]
     [SerializeField] private AudioSource _jumpSound;
@@ -97,7 +97,7 @@ public class PlayerScript : MonoBehaviour
         _inputSystemActions.Player.Jump.started += _ => JumpStarted();
         _inputSystemActions.Player.Jump.canceled += _ => JumpCanceled();
 
-        //_transition = _transitionManager.GetComponentInChildren<Animator>();
+        _transition = _transitionManager.GetComponentInChildren<Animator>();
     }
 
     private void FixedUpdate()
@@ -354,7 +354,7 @@ public class PlayerScript : MonoBehaviour
             _deathSound.Play();
         }
         //_playerMaterial.SetFloat("_HitEffectBlend", 1f);
-        //_transition.SetBool("Start", true);
+        _transition.SetBool("Start", true);
         MiniJump(_dieJumpAmount);
         StartCoroutine(Respawn(_respawnTime));
     }
@@ -378,7 +378,7 @@ public class PlayerScript : MonoBehaviour
     {
         yield return new WaitForSeconds(_respawnCooldown);
         _isActive = true;
-        //_transition.SetBool("Start", false);
+        _transition.SetBool("Start", false);
     }
     private void IsGrounded()
     {
