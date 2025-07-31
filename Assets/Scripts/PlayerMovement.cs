@@ -26,13 +26,9 @@ public class PlayerScript : MonoBehaviour
     [SerializeField] private bool _isGrounded;
     private bool _isJumping;
     private bool _jumpPressed;
-    public static bool _isActive = true;
-    public bool _isSwapped = false;
-    public bool _isSwappedPropriety = false;
+    [SerializeField] private static bool _isActive = true;
     private bool _isPressing;
-    public static bool _isRunning;
-    public bool _canMove = true;
-    public bool _canJump = true;
+    [SerializeField] private static bool _isRunning;
 
     [Space(10), Header("Jump variables")]
     private float _lastGrounded;
@@ -127,35 +123,26 @@ public class PlayerScript : MonoBehaviour
         JumpCases();
         IsGrounded();
 
-        if (!_isSwapped)
+        if (!_isFacingRight && _movementInput.x > 0f)
         {
-            if (!_isFacingRight && _movementInput.x > 0f)
-            {
-                Flip();
-            }
-            else if (_isFacingRight && _movementInput.x < 0f)
-            {
-                Flip();
-            }
+            Flip();
+        }
+        else if (_isFacingRight && _movementInput.x < 0f)
+        {
+            Flip();
         }
     }
     private void Move(float _lerpAmount)
     {
-        if (_canMove == false)
-        {
-            return;
-        }
         _movementInput = _inputSystemActions.Player.Move.ReadValue<Vector2>();
-        if (!_isSwapped)
+
+        if (_movementInput.x == 0)
         {
-            if (_movementInput.x == 0)
-            {
-                _isRunning = false;
-            }
-            else
-            {
-                _isRunning = true;
-            }
+            _isRunning = false;
+        }
+        else
+        {
+            _isRunning = true;
         }
         //_anim.SetBool("isRunning", _isRunning);
 
@@ -231,10 +218,6 @@ public class PlayerScript : MonoBehaviour
 
     private void Jump()
     {
-        if (_canJump == false)
-        {
-            return;
-        }
         if (_coyoteCooldownTimer > 0f && !_isJumping)
         {
             if (_jumpSound != null)
@@ -264,11 +247,6 @@ public class PlayerScript : MonoBehaviour
 
     private void JumpCases()
     {
-        if (_canJump == false)
-        {
-            return;
-        }
-
         if (_isPressing)
         {
             _pressedTime += Time.deltaTime;
@@ -325,10 +303,6 @@ public class PlayerScript : MonoBehaviour
 
     private void GravityCases()
     {
-        if (_isSwappedPropriety)
-        {
-            return;
-        }
         if (_rigidBody.linearVelocity.y < 0 && (_movementInput.y < 0))
         {
             SetGravityScale(_gravityScale * _fastFallGravityMult);
@@ -433,5 +407,4 @@ public class PlayerScript : MonoBehaviour
         Debug.DrawLine(bottomRight, bottomLeft, Color.green);
         Debug.DrawLine(bottomLeft, topLeft, Color.green);
     }
-
 }
