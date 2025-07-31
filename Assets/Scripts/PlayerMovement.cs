@@ -6,7 +6,6 @@ using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
 {
-    //[SerializeField, Description("Player")] private GameObject playerObject;
     private InputSystem_Actions _inputSystemActions;
     private Rigidbody2D _rigidBody;
     private Renderer _playerRenderer;
@@ -43,7 +42,7 @@ public class PlayerScript : MonoBehaviour
     [SerializeField] private float _jumpTime = 0.15f;
     [SerializeField] private float _jumpCooldownTime;
     [SerializeField] private Vector2 _groundCheckSize;
-    [SerializeField] private Vector2 _boxGroundCheckSize;
+    [SerializeField] private Vector2 _groundCheckPosition;
 
     [Space(10)]
     [Header("Movement variables")]
@@ -220,7 +219,6 @@ public class PlayerScript : MonoBehaviour
 
     private void JumpStarted()
     {
-        Debug.Log("jump started");
         if (!_isActive)
         {
             return;
@@ -243,7 +241,6 @@ public class PlayerScript : MonoBehaviour
             {
                 _jumpSound.Play();
             }
-            Debug.Log("jumping");
             _isPressing = false;
             _pressedTime = 0f;
             _isJumping = true;
@@ -280,6 +277,7 @@ public class PlayerScript : MonoBehaviour
         {
             _pressedTime -= Time.deltaTime;
         }
+
         if (_isGrounded)
         {
             _coyoteCooldownTimer = _coyoteTime;
@@ -410,23 +408,30 @@ public class PlayerScript : MonoBehaviour
     }
     private void IsGrounded()
     {
+        Vector2 checkCenter = new(
+            _playerRenderer.bounds.center.x + _groundCheckPosition.x,
+            _playerRenderer.bounds.min.y + _groundCheckPosition.y
+        );
 
-        Collider2D[] colliders;
-        if (_isSwapped)
-        {
-            Vector3 lowestPosition = new(_playerRenderer.bounds.center.x, _playerRenderer.bounds.center.y - 1f, 0f);
-            colliders = Physics2D.OverlapBoxAll(lowestPosition, _boxGroundCheckSize, 0, _groundLayer);
-        }
-        else
-        {
-            Vector3 lowestPosition = new(_playerRenderer.bounds.center.x, _playerRenderer.bounds.min.y, 0f);
-            colliders = Physics2D.OverlapBoxAll(lowestPosition, _groundCheckSize, 0, _groundLayer);
-        }
+        Collider2D[] colliders = Physics2D.OverlapBoxAll(checkCenter, _groundCheckSize, 0, _groundLayer);
 
         _isGrounded = colliders.Any(c => c.gameObject != gameObject);
         if (_isGrounded)
         {
             _lastGrounded = Time.time;
         }
+
+        Vector2 halfSize = _groundCheckSize * 0.5f;
+
+        Vector3 topLeft = new Vector3(checkCenter.x - halfSize.x, checkCenter.y + halfSize.y, 0);
+        Vector3 topRight = new Vector3(checkCenter.x + halfSize.x, checkCenter.y + halfSize.y, 0);
+        Vector3 bottomRight = new Vector3(checkCenter.x + halfSize.x, checkCenter.y - halfSize.y, 0);
+        Vector3 bottomLeft = new Vector3(checkCenter.x - halfSize.x, checkCenter.y - halfSize.y, 0);
+
+        Debug.DrawLine(topLeft, topRight, Color.green);
+        Debug.DrawLine(topRight, bottomRight, Color.green);
+        Debug.DrawLine(bottomRight, bottomLeft, Color.green);
+        Debug.DrawLine(bottomLeft, topLeft, Color.green);
     }
+
 }
