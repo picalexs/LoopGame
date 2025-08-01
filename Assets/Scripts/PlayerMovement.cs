@@ -235,7 +235,6 @@ public class PlayerMovement : MonoBehaviour
     private void JumpCanceled()
     {
         _isPressing = false;
-        Debug.Log("jump canceled");
         if (_isJumping)
         {
             _rigidBody.AddForce((1 - _jumpCutMult) * _rigidBody.linearVelocity.y * Vector2.down, ForceMode2D.Impulse);
