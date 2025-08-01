@@ -1,15 +1,41 @@
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+[ExecuteAlways]
 public class ProceduralGear : MonoBehaviour
 {
+    [Range(4, 40)]
     public int numberOfTeeth = 20;
-    public float radius = 1f;
+    [Range(0.1f, 0.8f)]
+    public float sideLength = 0.3f;
+    [Range(0.1f, 0.8f)]
     public float toothDepth = 0.3f;
+    private float radius;
 
     void Start()
     {
         GenerateGear();
+    }
+    void OnValidate()
+    {
+        numberOfTeeth = Mathf.RoundToInt(numberOfTeeth / 2f) * 2;
+        if (!Application.isPlaying)
+        {
+            GenerateGear();
+        }
+    }
+
+    void DrawGismos()
+    {
+        GenerateGear();
+#if UNITY_EDITOR
+      // Ensure continuous Update calls.
+      if (!Application.isPlaying)
+      {
+         UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+         UnityEditor.SceneView.RepaintAll();
+      }
+#endif
     }
 
     void GenerateGear()
@@ -32,6 +58,7 @@ public class ProceduralGear : MonoBehaviour
 
         for (int i = 0; i < numberOfTeeth; i++)
         {
+            radius = sideLength / (2 * Mathf.Sin(Mathf.PI / numberOfTeeth));
             float angle = i * angleStep;
             float nextAngle = (i + 1) * angleStep;
             
@@ -45,7 +72,7 @@ public class ProceduralGear : MonoBehaviour
             triangles[triIndex] = vertIndex + 2;
             triangles[triIndex + 1] = vertIndex;
             triangles[triIndex + 2] = vertIndex + 1;
-
+         
             vertIndex += 3;
             triIndex += 3;
 
