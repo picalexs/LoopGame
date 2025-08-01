@@ -2,9 +2,9 @@ using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 [ExecuteAlways]
-public class ProceduralGear : MonoBehaviour
+public class GearGenerator : MonoBehaviour
 {
-    [Range(4, 40)]
+    [Range(8, 40)]
     public int numberOfTeeth = 20;
     [Range(0.1f, 0.8f)]
     public float sideLength = 0.3f;
@@ -19,23 +19,19 @@ public class ProceduralGear : MonoBehaviour
     void OnValidate()
     {
         numberOfTeeth = Mathf.RoundToInt(numberOfTeeth / 2f) * 2;
-        if (!Application.isPlaying)
-        {
-            GenerateGear();
-        }
     }
 
     void DrawGismos()
     {
         GenerateGear();
-#if UNITY_EDITOR
-      // Ensure continuous Update calls.
-      if (!Application.isPlaying)
-      {
-         UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
-         UnityEditor.SceneView.RepaintAll();
-      }
-#endif
+    #if UNITY_EDITOR
+          // Ensure continuous Update calls.
+          if (!Application.isPlaying)
+          {
+             UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+             UnityEditor.SceneView.RepaintAll();
+          }
+    #endif
     }
 
     void GenerateGear()
@@ -80,7 +76,7 @@ public class ProceduralGear : MonoBehaviour
             {
                 Vector3 mid = (p1 + p2) * 0.5f;
                 Vector3 normal = mid.normalized;
-                Debug.Log(normal);
+                //Debug.Log(normal);
                 Vector3 q1 = p1 + normal * toothDepth;
                 Vector3 q2 = p2 + normal * toothDepth;
 
@@ -112,6 +108,16 @@ public class ProceduralGear : MonoBehaviour
         mesh.RecalculateBounds();
 
         GetComponent<MeshFilter>().mesh = mesh;
-
+        //CircleCollider2D triggerCircle = GetComponent<CircleCollider2D>();
+        //if (triggerCircle == null)
+        //{
+        //    triggerCircle = gameObject.AddComponent<CircleCollider2D>();
+        //}
+        //triggerCircle.isTrigger = true;
+        //CircleCollider2D circleCollider = gameObject.AddComponent<CircleCollider2D>();
+        //if (circleCollider == null)
+        //{
+        //    circleCollider = gameObject.AddComponent<CircleCollider2D>();
+        //}
     }
 }
