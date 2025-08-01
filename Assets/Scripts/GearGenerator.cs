@@ -1,5 +1,8 @@
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 [ExecuteAlways]
 public class GearGenerator : MonoBehaviour
@@ -19,13 +22,22 @@ public class GearGenerator : MonoBehaviour
     void OnValidate()
     {
         numberOfTeeth = Mathf.RoundToInt(numberOfTeeth / 2f) * 2;
+    #if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            EditorApplication.delayCall += () =>
+            {
+                if (this != null)
+                    GenerateGear();
+            };
+        }
+    #endif
     }
 
     void DrawGismos()
     {
         GenerateGear();
     #if UNITY_EDITOR
-          // Ensure continuous Update calls.
           if (!Application.isPlaying)
           {
              UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
@@ -107,7 +119,10 @@ public class GearGenerator : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
 
-        GetComponent<MeshFilter>().mesh = mesh;
+        if (!Application.isPlaying)
+            GetComponent<MeshFilter>().sharedMesh = mesh;
+        else
+            GetComponent<MeshFilter>().mesh = mesh;
         //CircleCollider2D triggerCircle = GetComponent<CircleCollider2D>();
         //if (triggerCircle == null)
         //{

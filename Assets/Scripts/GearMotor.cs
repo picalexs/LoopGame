@@ -17,9 +17,12 @@ public class GearMotor : MonoBehaviour
     {
         gameObject.GetComponent<GearMechanism>().spinCheck();
         Propagate(gameObject, motorMech.neighbours);
+        visited.Clear();
+        visited.Add(gameObject);
     }
     void Propagate(GameObject parent,HashSet<GameObject> neighbours)
     {
+        //Debug.Log("Entered Propagate function");
         foreach (GameObject neighbour in neighbours)
         {
             if (!visited.Contains(neighbour))
@@ -32,14 +35,14 @@ public class GearMotor : MonoBehaviour
 
             if (otherMech == null || otherGen == null || parentGen == null)
             {
-                Debug.LogWarning("Doesn't find gear");
+                Debug.LogWarning("Gear not found");
                 return;
             }
 
             int numberOfTeeth = parentGen.numberOfTeeth;
             int otherNumberOfTeeth = otherGen.numberOfTeeth;
-
-            if (isSpinning)
+            //Debug.Log(motorMech.isSpinning);
+            if (motorMech.isSpinning)
             {
                 float newSpeed = parentMech.speed * numberOfTeeth / otherNumberOfTeeth;
                 if (Mathf.Abs(otherMech.speed - newSpeed) > 0.01f || otherMech.way != parentMech.way * -1 || !otherMech.isSpinning)
