@@ -7,6 +7,10 @@ public class Rope : MonoBehaviour
     [SerializeField] private int _nrOfSegments;
     [SerializeField] private float _segmentLength;
 
+    [Header("Visual Smoothing")]
+    [SerializeField] private bool _enableSmoothing = true;
+    [SerializeField] private int _smoothingPasses = 1;
+
     [System.NonSerialized]
     public List<RopeSegment> ropeSegments = new List<RopeSegment>();
     public LineRenderer _lineRenderer;
@@ -32,6 +36,7 @@ public class Rope : MonoBehaviour
         _lineRenderer.positionCount = 0;
         _lineRenderer.loop = false;
     }
+
     private void Update()
     {
         RenderRope();
@@ -44,9 +49,32 @@ public class Rope : MonoBehaviour
 
         _lineRenderer.positionCount = ropeSegments.Count;
 
-        for (int i = 0; i < ropeSegments.Count; i++)
+        if (_enableSmoothing && ropeSegments.Count > 2)
         {
-            _lineRenderer.SetPosition(i, ropeSegments[i].position);
+            Vector3[] smoothedPositions = new Vector3[ropeSegments.Count];
+
+            for (int i = 0; i < ropeSegments.Count; i++)
+            {
+                smoothedPositions[i] = ropeSegments[i].position;
+            }
+
+            for (int pass = 0; pass < _smoothingPasses; pass++)
+            {
+                for (int i = 1; i < smoothedPositions.Length - 1; i++)
+                {
+                    smoothedPositions[i] = Vector3.Lerp(smoothedPositions[i],
+                        (smoothedPositions[i - 1] + smoothedPositions[i + 1]) * 0.5f, 0.5f);
+                }
+            }
+
+            _lineRenderer.SetPositions(smoothedPositions);
+        }
+        else
+        {
+            for (int i = 0; i < ropeSegments.Count; i++)
+            {
+                _lineRenderer.SetPosition(i, ropeSegments[i].position);
+            }
         }
     }
 

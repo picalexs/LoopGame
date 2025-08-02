@@ -479,6 +479,77 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1338773653}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &20769306
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 20769308}
+  - component: {fileID: 20769307}
+  m_Layer: 0
+  m_Name: LoopDrawerManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &20769307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20769306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a471ab29f75cb545bde6d4c86d5aea2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _segmentLength: 0.5
+  _minSegmentNumber: 20
+  _shrinkRate: 0.5
+  _minSegmentLength: 0.1
+  _shrinkDelay: 2
+  _shrinkMethod: 3
+  _gravityForce: {x: 0, y: 0}
+  _damping: 0.98
+  _collisionMask:
+    serializedVersion: 2
+    m_Bits: 448
+  _collisionRadius: 0.125
+  _bounceFactor: 0.5
+  _nrOfConstraintRuns: 30
+  _nrOfConstraintRunsHigh: 50
+  _collisionCheckFrequency: 3
+  _collisionCheckFrequencyHigh: 2
+  _playerLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  _playerProximityRadius: 5
+  _pinFirstPoint: 1
+  _centripetalForce: 0.25
+  _ropeMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
+  _ropeWidth: 0.5
+  _ropeStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _ropeEndColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!4 &20769308
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20769306}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &217487197
 GameObject:
   m_ObjectHideFlags: 0
@@ -1258,7 +1329,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &394566032
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1271,9 +1342,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce90ee28c545a884ba8a805fbfdd71e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _nrOfSegments: 0
-  _segmentLength: 0.75
-  _gravityForce: {x: 0, y: 0}
+  _segmentLength: 0
+  _gravityForce: {x: 0, y: 2}
   _damping: 0.98
   _collisionMask:
     serializedVersion: 2
@@ -1281,8 +1351,18 @@ MonoBehaviour:
   _collisionRadius: 0.4
   _bounceFactor: 0.5
   _nrOfConstraintRuns: 40
+  _nrOfConstraintRunsHigh: 40
   _collisionCheckFrequency: 4
-  _minSpacingDistance: 0.75
+  _collisionCheckFrequencyHigh: 1
+  _playerLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  _playerProximityRadius: 1
+  _pinFirstPoint: 0
+  _centripetalForce: 0
+  _collisionBuffer: 0.02
+  _frictionForce: 0.3
+  _collisionDamping: 0.6
 --- !u!120 &394566033
 LineRenderer:
   serializedVersion: 2
@@ -5390,6 +5470,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 884779250648371551, guid: 4c87150e8ecf42a499e59c018e16f3d0, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 5333704299753604585, guid: 4c87150e8ecf42a499e59c018e16f3d0, type: 3}
       propertyPath: m_LocalPosition.x
       value: -20
@@ -5461,3 +5545,4 @@ SceneRoots:
   - {fileID: 1971299619}
   - {fileID: 1338773653}
   - {fileID: 394566034}
+  - {fileID: 20769308}
