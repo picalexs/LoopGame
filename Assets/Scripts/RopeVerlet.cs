@@ -1,225 +1,156 @@
-using JetBrains.Annotations;
-using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class RopeVerlet : MonoBehaviour
 {
     [Header("Rope")]
-    [SerializeField] private int _nrOfSegments = 50;
-    [SerializeField] private float _segmentLength = 0.225f;
+    [SerializeField] private float _segmentLength;
 
     [Header("Physics")]
-    [SerializeField] private Vector2 _gravityForce = new Vector2(0f, -2f);
+    [SerializeField] private Vector2 _gravityForce = new Vector2(0f, 0f);
     [SerializeField] private float _damping = 0.98f;
     [SerializeField] private LayerMask _collisionMask;
-    [SerializeField] private float _collisionRadius = 0.1f;
-    [SerializeField] private float _bounceFactor = 0.9f;
+    [SerializeField] private float _collisionRadius = 0.125f;
+    [SerializeField] private float _bounceFactor = 0.5f;
 
     [Header("Constraints")]
-    [SerializeField] private int _nrOfConstraintRuns = 50;
+    [SerializeField] private int _nrOfConstraintRuns = 30;
+    [SerializeField] private int _nrOfConstraintRunsHigh = 60;
 
     [Header("Optimizations")]
     [Min(1)]
-    [SerializeField] private int _collisionCheckFrequency = 3;
+    [SerializeField]
+    private int _collisionCheckFrequency = 2;
+    [SerializeField]
+    [Min(1)]
+    private int _collisionCheckFrequencyHigh = 1;
 
-    private LineRenderer _lineRenderer;
-    private List<RopeSegment> _ropeSegments = new List<RopeSegment>();
+    [Header("Player interaction")]
+    [SerializeField] private LayerMask _playerLayer;
+    [SerializeField] private float _playerProximityRadius = 5f;
 
+    [Header("Rope Behavior")]
+    [SerializeField] private bool _pinFirstPoint = false;
 
-    [Header("Draw Line")]
-    [Min(0.1f)]
-    [SerializeField] private float _minSpacingDistance = 0.5f;
-
-    private bool _isLeftClicking = false;
-
-    public struct RopeSegment
-    {
-        public Vector2 position;
-        public Vector2 previousPosition;
-        public RopeSegment(Vector2 position)
-        {
-            this.position = position;
-            this.previousPosition = position;
-        }
-    }
+    private Rope _rope;
+    private ContactFilter2D _collisionFilter;
+    private List<Collider2D> _colliders = new List<Collider2D>(32);
 
     private void Awake()
     {
-        _lineRenderer = GetComponent<LineRenderer>();
+        _rope = GetComponent<Rope>();
+        if (_rope != null)
+        {
+            _segmentLength = _rope.GetSegmentLength();
+            _collisionMask = LayerMask.GetMask("Ground", "Player");
+        }
+        _collisionFilter = new ContactFilter2D();
+        _collisionFilter.SetLayerMask(_collisionMask);
+        _collisionFilter.useTriggers = false;
     }
 
-    private void Update()
+    public void UpdateSegmentLength(float newLength)
     {
-        DrawRope();
-        RenderRope();
+        _segmentLength = newLength;
+    }
+
+    public void SetPinFirstPoint(bool pinFirst)
+    {
+        _pinFirstPoint = pinFirst;
     }
 
     private void FixedUpdate()
     {
         Simulate();
+        bool playerNearby = _rope.ropeSegments.Count > 0
+            && Physics2D.OverlapCircle(_rope.ropeSegments[0].position, _playerProximityRadius, _playerLayer) != null;
+        int runs = playerNearby ? _nrOfConstraintRunsHigh : _nrOfConstraintRuns;
+        int freq = playerNearby ? _collisionCheckFrequencyHigh : _collisionCheckFrequency;
 
-        for (int i = 0; i < _nrOfConstraintRuns; i++)
+        for (int i = 0; i < runs; i++)
         {
             ApplyConstraints();
-
-            if (i % _collisionCheckFrequency == 0)
-            {
-                HandleCollisions();
-            }
+            if (i % freq == 0) HandleCollisions();
         }
     }
-
-    private void ResetRope()
-    {
-        _ropeSegments.Clear();
-        _nrOfSegments = 0;
-        _lineRenderer.positionCount = 0;
-    }
-
-    private void DrawRope()
-    {
-        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-
-        if (!Mouse.current.leftButton.isPressed)
-        {
-            if (_isLeftClicking)
-            {
-                AddSegment(_ropeSegments[0].position);
-                _lineRenderer.loop = true;
-            }
-            _isLeftClicking = false;
-            return;
-        }
-
-        _isLeftClicking = true;
-        if (_ropeSegments.Count == 0)
-        {
-            _ropeSegments.Add(new RopeSegment(mousePosition));
-            Debug.Log("First segment added at: " + mousePosition);
-        }
-        else
-        {
-            AddSegment(mousePosition);
-        }
-    }
-
-    private void AddSegment(Vector2 newPosition)
-    {
-        RopeSegment lastSegment = _ropeSegments[_ropeSegments.Count - 1];
-        Vector2 lastPos = lastSegment.position;
-        float distance = Vector2.Distance(lastPos, newPosition);
-
-        if (distance >= _minSpacingDistance)
-        {
-            int segmentsToAdd = Mathf.FloorToInt(distance / _minSpacingDistance);
-            Vector2 direction = (newPosition - lastPos).normalized;
-
-            for (int i = 1; i <= segmentsToAdd; i++)
-            {
-                Vector2 newPoint = lastPos + direction * (_minSpacingDistance * i);
-                _ropeSegments.Add(new RopeSegment(newPoint));
-                Debug.Log("Segment added at: " + newPoint);
-            }
-        }
-    }
-
-
-    private void RenderRope()
-    {
-        if (_ropeSegments.Count == 0)
-            return;
-
-        _lineRenderer.positionCount = _ropeSegments.Count;
-
-        for (int i = 0; i < _ropeSegments.Count; i++)
-        {
-            _lineRenderer.SetPosition(i, _ropeSegments[i].position);
-        }
-    }
-
-
     private void Simulate()
     {
-        for (int i = 0; i < _ropeSegments.Count; i++)
+        for (int i = 0; i < _rope.ropeSegments.Count; i++)
         {
-            RopeSegment segment = _ropeSegments[i];
-            Vector2 velocity = (segment.position - segment.previousPosition) * _damping;
-
-            segment.previousPosition = segment.position;
-            segment.position += velocity;
-            segment.position += _gravityForce * Time.fixedDeltaTime;
-            _ropeSegments[i] = segment;
+            RopeSegment s = _rope.ropeSegments[i];
+            Vector2 vel = (s.position - s.previousPosition) * _damping;
+            s.previousPosition = s.position;
+            s.position += vel + _gravityForce * Time.fixedDeltaTime;
+            _rope.ropeSegments[i] = s;
         }
     }
 
     private void ApplyConstraints()
     {
-        if (_ropeSegments.Count == 0)
+        if (_rope.ropeSegments.Count < 2) return;
+
+        for (int i = 0; i < _rope.ropeSegments.Count - 1; i++)
         {
-            return;
-        }
+            RopeSegment a = _rope.ropeSegments[i];
+            RopeSegment b = _rope.ropeSegments[i + 1];
+            Vector2 delta = a.position - b.position;
+            float dist = delta.magnitude;
+            float diff = dist - _segmentLength;
 
-        RopeSegment firstSegment = _ropeSegments[0];
-        _ropeSegments[0] = firstSegment;
-
-        for (int i = 0; i < _ropeSegments.Count - 1; i++)
-        {
-            RopeSegment currentSegment = _ropeSegments[i];
-            RopeSegment nextSegment = _ropeSegments[i + 1];
-
-            float distance = (currentSegment.position - nextSegment.position).magnitude;
-            float difference = distance - _segmentLength;
-
-            Vector2 changeDir = (currentSegment.position - nextSegment.position).normalized;
-            Vector2 changeVector = changeDir * difference;
-
-            if (i != 0)
+            if (dist > 0f)
             {
-                currentSegment.position -= changeVector * 0.5f;
-                nextSegment.position += changeVector * 0.5f;
-            }
-            else
-            {
-                nextSegment.position += changeVector;
+                Vector2 n = delta / dist;
+                Vector2 move = n * (diff * 0.5f);
+
+                if (_pinFirstPoint && i == 0)
+                {
+                    b.position += n * diff;
+                }
+                else
+                {
+                    a.position -= move;
+                    b.position += move;
+                }
             }
 
-            _ropeSegments[i] = currentSegment;
-            _ropeSegments[i + 1] = nextSegment;
+            _rope.ropeSegments[i] = a;
+            _rope.ropeSegments[i + 1] = b;
         }
     }
 
     private void HandleCollisions()
     {
-        for (int i = 0; i < _ropeSegments.Count; i++)
+        int count = _rope.ropeSegments.Count;
+        for (int i = 0; i < count; i++)
         {
-            RopeSegment segment = _ropeSegments[i];
-            Vector2 velocity = segment.position - segment.previousPosition;
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(segment.position, _collisionRadius, _collisionMask);
+            RopeSegment s = _rope.ropeSegments[i];
+            Vector2 vel = s.position - s.previousPosition;
 
-            foreach (Collider2D collider in colliders)
+            _colliders.Clear();
+            int hits = Physics2D.OverlapCircle(s.position, _collisionRadius, _collisionFilter, _colliders);
+
+            for (int j = 0; j < hits; j++)
             {
-                Vector2 closestPoint = collider.ClosestPoint(segment.position);
-                float distance = Vector2.Distance(segment.position, closestPoint);
+                Collider2D c = _colliders[j];
+                Vector2 cp = c.ClosestPoint(s.position);
+                float d = Vector2.Distance(s.position, cp);
 
-                if (distance < _collisionRadius)
+                if (d < _collisionRadius)
                 {
-                    Vector2 normal = (segment.position - closestPoint).normalized;
-                    if (normal == Vector2.zero)
-                    {
-                        normal = (segment.position - (Vector2)collider.transform.position).normalized;
-                    }
+                    Vector2 n = (s.position - cp).normalized;
+                    if (n == Vector2.zero)
+                        n = (s.position - (Vector2)c.transform.position).normalized;
 
-                    float depth = _collisionRadius - distance;
-                    segment.position += normal * depth;
+                    float penetration = _collisionRadius - d;
+                    s.position += n * (penetration + 0.01f);
 
-                    velocity = Vector2.Reflect(velocity, normal) * _bounceFactor;
+                    vel = Vector2.Reflect(vel, n) * _bounceFactor;
+                    vel *= 0.8f;
                 }
             }
 
-            segment.previousPosition = segment.position - velocity;
-            _ropeSegments[i] = segment;
+            s.previousPosition = s.position - vel;
+            _rope.ropeSegments[i] = s;
         }
     }
 }
