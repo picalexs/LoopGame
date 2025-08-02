@@ -20,7 +20,7 @@ public class GearMotor : MonoBehaviour
         visited.Clear();
         visited.Add(gameObject);
     }
-    void Propagate(GameObject parent,HashSet<GameObject> neighbours)
+    public void Propagate(GameObject parent,HashSet<GameObject> neighbours)
     {
         //Debug.Log("Entered Propagate function");
         foreach (GameObject neighbour in neighbours)
